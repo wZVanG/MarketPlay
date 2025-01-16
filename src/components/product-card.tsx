@@ -19,6 +19,7 @@ import { revalidate } from "@/lib/actions";
 import Link from "next/link";
 import { MouseEvent } from "react";
 
+
 /*const PRODUCT_STATUS_VARIANTS = {
   NUEVO: "success",
   REACONDICIONADO: "default",
@@ -75,6 +76,14 @@ export function ProductCard({ product }: { product: Product }) {
       </CardContent>
       <CardFooter className="flex justify-between items-center border-t border-gray-200 p-4">
         <Button
+          onClick={handleDelete}
+          size="sm"
+          variant="ghost"
+          className="flex items-center gap-2"
+        >
+          <LucideTrash className="w-4 h-4" /> Eliminar
+        </Button>
+        <Button
           asChild
           size="sm"
           variant="default"
@@ -84,14 +93,7 @@ export function ProductCard({ product }: { product: Product }) {
             <LucideEdit className="w-4 h-4" /> Editar
           </Link>
         </Button>
-        <Button
-          onClick={handleDelete}
-          size="sm"
-          variant="ghost"
-          className="flex items-center gap-2"
-        >
-          <LucideTrash className="w-4 h-4" /> Eliminar
-        </Button>
+
       </CardFooter>
     </Card>
   );

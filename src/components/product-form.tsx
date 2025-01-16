@@ -3,7 +3,7 @@
 import { Product, ProductStatus } from "@/app/products/products.interface";
 import { PRODUCT_STATUS_VARIANTS, STATUS_LABELS } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { createProduct, updateProduct } from "@/app/products/products.api";
 import Link from "next/link";
@@ -20,6 +20,12 @@ import {
   SelectValue,
 } from "./ui/select";
 import { Textarea } from "./ui/textarea";
+import { createOpenAI } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const openai = createOpenAI({
+  apiKey: process.env.OPENAI_API_KEY!,
+});
 
 interface Inputs {
   title: string;
@@ -32,7 +38,7 @@ export const ProductForm = ({ product }: { product?: Product }) => {
   const router = useRouter();
 
   const { toast } = useToast();
-  const { register, handleSubmit, setValue } = useForm<Inputs>({
+  const { register, handleSubmit, setValue, getValues } = useForm<Inputs>({
     defaultValues: {
       title: product?.title,
       photo: product?.photo,
@@ -43,12 +49,90 @@ export const ProductForm = ({ product }: { product?: Product }) => {
 
   const [uploading, setUploading] = useState(false);
   const [photoUrl, setPhotoUrl] = useState(product?.photo || "");
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analysisTimeout, setAnalysisTimeout] = useState(false);
+
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    if (analyzing) {
+      timeoutId = setTimeout(() => {
+        setAnalysisTimeout(true);
+        setAnalyzing(false);
+
+      }, 5000);
+    }
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [analyzing, toast]);
+
+  const analyzeImage = async (imageUrl: string) => {
+    setAnalyzing(true);
+    setAnalysisTimeout(false);
+    try {
+
+      const result = await generateText({
+        model: openai('gpt-4o'),
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text', text: `
+                Genere un título de producto de dos palabras y una descripción de cinco palabras para esta imagen. 
+                Responda en formato JSON con los campos "title" y "description".
+                `.trim()
+              },
+              {
+                type: 'image',
+                image:
+                  imageUrl,
+
+                // OpenAI specific extension - image detail:
+                experimental_providerMetadata: {
+                  openai: { imageDetail: 'low' },
+                },
+              },
+            ],
+          },
+        ],
+      });
+
+      if (result && result.text) {
+        try {
+          const jsonString = result.text.replace(/```json\n|\n```/g, '');
+          const jsonObject = JSON.parse(jsonString);
+
+          if ('title' in jsonObject && 'description' in jsonObject) {
+            setValue("title", jsonObject.title);
+            setValue("description", jsonObject.description);
+          }
+
+        } catch (e) {
+          console.log("Error parsing JSON:", e);
+        }
+
+      }
+
+
+    } catch (error) {
+      console.log("Error analyzing image:", error);
+
+    } finally {
+      setAnalyzing(false);
+    }
+  };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     setUploading(true);
+
 
     try {
       const formData = new FormData();
@@ -60,9 +144,18 @@ export const ProductForm = ({ product }: { product?: Product }) => {
       });
 
       const data = await response.json();
+
       if (data.fileUrl) {
+
         setPhotoUrl(data.fileUrl);
         setValue("photo", data.fileUrl);
+
+        //Analizar solo si el titulo y la descripción del formulario están vacíos, no de data
+
+        if (!getValues("title") && !getValues("description")) {
+          await analyzeImage(data.fileUrl);
+        }
+
       }
     } catch (error) {
       console.error("Error uploading file:", error);
@@ -115,16 +208,10 @@ export const ProductForm = ({ product }: { product?: Product }) => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-      <div>
-        <Label className="block mb-2" htmlFor="title">
-          Título
-        </Label>
-        <Input {...register("title", { required: true })} id="title" />
-      </div>
 
       <div>
         <Label className="block mb-2" htmlFor="photo">
-          Foto
+          Sube la foto del producto:
         </Label>
         <div className="flex flex-col gap-2">
           {photoUrl && (
@@ -143,13 +230,42 @@ export const ProductForm = ({ product }: { product?: Product }) => {
           />
           <input
             type="hidden"
+
             {...register("photo")}
             value={photoUrl}
           />
         </div>
       </div>
 
+
+
       <div>
+        <Label className="block mb-2" htmlFor="title">
+          Título
+        </Label>
+        <Input
+          {...register("title", { required: true })}
+          id="title"
+          className={`${analyzing ? 'animate-pulse bg-gray-100' : ''}`}
+          disabled={analyzing}
+        />
+      </div>
+
+      <div>
+        <Label className="block mb-2" htmlFor="description">
+          Descripción
+        </Label>
+        <Textarea
+          {...register("description")}
+          id="description"
+          className={`${analyzing ? 'animate-pulse bg-gray-100' : ''}`}
+          disabled={analyzing}
+        />
+      </div>
+
+
+
+      <div className="mb-8">
         <Label className="block mb-2" htmlFor="assigned">
           Condición
         </Label>
@@ -168,21 +284,15 @@ export const ProductForm = ({ product }: { product?: Product }) => {
 
       </div>
 
-      <div>
-        <Label className="block mb-2" htmlFor="description">
-          Descripción
-        </Label>
-        <Textarea {...register("description")} id="description" />
-      </div>
-
       <div className="flex justify-between gap-4">
-        <Button type="submit">
-          {product?.id ? "Guardar" : "Crear"}
-        </Button>
 
         <Button asChild variant="secondary">
           <Link href={"/products"}>Regresar</Link>
         </Button>
+        <Button type="submit">
+          {product?.id ? "Guardar" : "Crear"}
+        </Button>
+
       </div>
     </form>
   );
