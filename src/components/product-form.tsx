@@ -20,12 +20,7 @@ import {
   SelectValue,
 } from "./ui/select";
 import { Textarea } from "./ui/textarea";
-import { createOpenAI } from '@ai-sdk/openai';
-import { generateText } from 'ai';
 
-const openai = createOpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
-});
 
 interface Inputs {
   title: string;
@@ -75,45 +70,25 @@ export const ProductForm = ({ product }: { product?: Product }) => {
     setAnalysisTimeout(false);
     try {
 
-      const result = await generateText({
-        model: openai('gpt-4o'),
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text', text: `
-                Genere un título de producto de dos palabras y una descripción de cinco palabras para esta imagen. 
-                Responda en formato JSON con los campos "title" y "description".
-                `.trim()
-              },
-              {
-                type: 'image',
-                image:
-                  imageUrl,
-
-                // OpenAI specific extension - image detail:
-                experimental_providerMetadata: {
-                  openai: { imageDetail: 'low' },
-                },
-              },
-            ],
-          },
-        ],
+      const response = await fetch("/api/analyze-image", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ imageUrl }),
       });
 
-      if (result && result.text) {
-        try {
-          const jsonString = result.text.replace(/```json\n|\n```/g, '');
-          const jsonObject = JSON.parse(jsonString);
+      if (!response.ok) {
+        throw new Error('Failed to analyze image');
+      }
 
-          if ('title' in jsonObject && 'description' in jsonObject) {
-            setValue("title", jsonObject.title);
-            setValue("description", jsonObject.description);
-          }
+      const result = await response.json();
 
-        } catch (e) {
-          console.log("Error parsing JSON:", e);
+      if (result) {
+
+        if ('title' in result && 'description' in result) {
+          setValue("title", result.title);
+          setValue("description", result.description);
         }
 
       }
