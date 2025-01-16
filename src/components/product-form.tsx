@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "./ui/select";
 import { Textarea } from "./ui/textarea";
+import LoadingFormWrapper from "../components/loading-form-wrapper";
 
 
 interface Inputs {
@@ -127,9 +128,9 @@ export const ProductForm = ({ product }: { product?: Product }) => {
 
         //Analizar solo si el titulo y la descripción del formulario están vacíos, no de data
 
-        if (!getValues("title") && !getValues("description")) {
-          await analyzeImage(data.fileUrl);
-        }
+
+        await analyzeImage(data.fileUrl);
+
 
       }
     } catch (error) {
@@ -182,93 +183,95 @@ export const ProductForm = ({ product }: { product?: Product }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+    <LoadingFormWrapper isLoading={analyzing}>
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
 
-      <div>
-        <Label className="block mb-2" htmlFor="photo">
-          Sube la foto del producto:
-        </Label>
-        <div className="flex flex-col gap-2">
-          {photoUrl && (
-            <img
-              src={photoUrl}
-              alt="Preview"
-              className="w-32 h-32 object-cover rounded-lg"
+        <div>
+          <Label className="block mb-2" htmlFor="photo">
+            Sube la foto del producto:
+          </Label>
+          <div className="flex flex-col gap-2">
+            {photoUrl && (
+              <img
+                src={photoUrl}
+                alt="Preview"
+                className="w-32 h-32 object-cover rounded-lg"
+              />
+            )}
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={handleFileUpload}
+              disabled={uploading}
+              id="photo"
             />
-          )}
-          <Input
-            type="file"
-            accept="image/*"
-            onChange={handleFileUpload}
-            disabled={uploading}
-            id="photo"
-          />
-          <input
-            type="hidden"
+            <input
+              type="hidden"
 
-            {...register("photo")}
-            value={photoUrl}
+              {...register("photo")}
+              value={photoUrl}
+            />
+          </div>
+        </div>
+
+
+
+        <div>
+          <Label className="block mb-2" htmlFor="title">
+            Título
+          </Label>
+          <Input
+            {...register("title", { required: true })}
+            id="title"
+            className={`${analyzing ? 'animate-pulse bg-gray-100' : ''}`}
+            disabled={analyzing}
           />
         </div>
-      </div>
+
+        <div>
+          <Label className="block mb-2" htmlFor="description">
+            Descripción
+          </Label>
+          <Textarea
+            {...register("description")}
+            id="description"
+            className={`${analyzing ? 'animate-pulse bg-gray-100' : ''}`}
+            disabled={analyzing}
+          />
+        </div>
 
 
 
-      <div>
-        <Label className="block mb-2" htmlFor="title">
-          Título
-        </Label>
-        <Input
-          {...register("title", { required: true })}
-          id="title"
-          className={`${analyzing ? 'animate-pulse bg-gray-100' : ''}`}
-          disabled={analyzing}
-        />
-      </div>
+        <div className="mb-8">
+          <Label className="block mb-2" htmlFor="assigned">
+            Condición
+          </Label>
+          <Select defaultValue={product?.status?.toString()} onValueChange={handleChange}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(STATUS_LABELS).map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-      <div>
-        <Label className="block mb-2" htmlFor="description">
-          Descripción
-        </Label>
-        <Textarea
-          {...register("description")}
-          id="description"
-          className={`${analyzing ? 'animate-pulse bg-gray-100' : ''}`}
-          disabled={analyzing}
-        />
-      </div>
+        </div>
 
+        <div className="flex justify-between gap-4">
 
+          <Button asChild variant="secondary">
+            <Link href={"/products"}>Regresar</Link>
+          </Button>
+          <Button type="submit">
+            {product?.id ? "Guardar" : "Crear"}
+          </Button>
 
-      <div className="mb-8">
-        <Label className="block mb-2" htmlFor="assigned">
-          Condición
-        </Label>
-        <Select defaultValue={product?.status?.toString()} onValueChange={handleChange}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {Object.entries(STATUS_LABELS).map(([value, label]) => (
-              <SelectItem key={value} value={value}>
-                {label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-      </div>
-
-      <div className="flex justify-between gap-4">
-
-        <Button asChild variant="secondary">
-          <Link href={"/products"}>Regresar</Link>
-        </Button>
-        <Button type="submit">
-          {product?.id ? "Guardar" : "Crear"}
-        </Button>
-
-      </div>
-    </form>
+        </div>
+      </form>
+    </LoadingFormWrapper>
   );
 };
