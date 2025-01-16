@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+# Despliegue Local de Market Playgroup Latam
 
-First, run the development server:
+Para ejecutar este proyecto localmente, sigue los pasos a continuación.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Requisitos
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Tener una URL válida de PostgreSQL para configurar la conexión a la base de datos.
+- Contar con las credenciales de acceso (Access Keys) de un bucket S3 válido para el almacenamiento de imágenes.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Pasos para el despliegue
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **Clonar el repositorio:**
 
-## Learn More
+   Si aún no has clonado el repositorio, hazlo utilizando el siguiente comando:
 
-To learn more about Next.js, take a look at the following resources:
+   ```bash
+   git clone git@github.com:wZVanG/MarketPlay.git
+   cd MarketPlay
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. **Configurar las variables de entorno:**
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   Copia el archivo `.env.back` a un nuevo archivo llamado `.env` en el directorio raíz del proyecto:
 
-## Deploy on Vercel
+   ```bash
+   cp .env.back .env
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   Luego, edita el archivo `.env` y completa las siguientes variables con los valores correspondientes de tu entorno:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   - `DATABASE_URL`: URL de conexión a la base de datos PostgreSQL.
+   - Las credenciales de acceso para el bucket S3.
+
+3. **Instalar las dependencias:**
+
+   Instala las dependencias del proyecto utilizando `pnpm`:
+
+   ```bash
+   pnpm install
+   ```
+
+4. **Generar el cliente de Prisma:**
+
+   Ejecuta el siguiente comando para generar el cliente de Prisma:
+
+   ```bash
+   pnpm prisma generate
+   ```
+
+5. **Desplegar la aplicación:**
+
+   Una vez configurado el entorno y las dependencias, ejecuta el siguiente comando para desplegar la aplicación localmente:
+
+   ```bash
+   pnpm run deploy
+   ```
+
