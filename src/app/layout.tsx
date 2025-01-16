@@ -15,12 +15,14 @@ const poppinsFont = Poppins({
 const RootLayout = ({ children }: { children: React.ReactNode }) => (
   <html lang="en">
     <body className={`${poppinsFont.className} antialiased overflow-y-scroll`}>
-      <Providers>
-        <Suspense fallback={null}>
+      <Suspense fallback={<div></div>}>
+        <Providers>
+
           {children}
-        </Suspense>
-        <Toaster />
-      </Providers>
+
+          <Toaster />
+        </Providers>
+      </Suspense>
     </body>
   </html>
 );
