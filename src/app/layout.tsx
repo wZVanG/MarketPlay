@@ -2,6 +2,8 @@ import "./globals.css";
 import { Poppins } from "next/font/google";
 import { Toaster } from "@/components/ui/toaster";
 import { Providers } from "./providers";
+import { Suspense } from 'react'
+
 
 const poppinsFont = Poppins({
   subsets: ["latin"],
@@ -14,7 +16,9 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => (
   <html lang="en">
     <body className={`${poppinsFont.className} antialiased overflow-y-scroll`}>
       <Providers>
-        {children}
+        <Suspense fallback={null}>
+          {children}
+        </Suspense>
         <Toaster />
       </Providers>
     </body>

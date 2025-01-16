@@ -13,8 +13,6 @@ export function ProductFilter() {
   const searchParams = useSearchParams();
   const currentStatus = searchParams.get("status");
 
-  console.log("Filter - currentStatus: ---->", currentStatus);
-
   return (
     <nav className="flex space-x-4 px-4 align-items-center">
 
