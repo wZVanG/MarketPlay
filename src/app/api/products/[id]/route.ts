@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 import prisma from "@/lib/db";
 import { productSchema } from "@/lib/schemas/product.schema";
 import { NextRequest, NextResponse } from "next/server";
