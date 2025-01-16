@@ -12,7 +12,7 @@ export const getProducts = async ({
 }> => {
   try {
 
-    let url = `${URL}/products?${status ? `status=${status}` : ""}`;
+    const url = `${URL}/products?${status ? `status=${status}` : ""}`;
 
     const response = await fetch(url);
     const data = await response.json();

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ProductStatus } from "@/app/products/products.interface";
+//import { ProductStatus } from "@/app/products/products.interface"; 
 import prisma from "@/lib/db";
 import { productSchema } from "@/lib/schemas/product.schema";
 import { NextRequest, NextResponse } from "next/server";

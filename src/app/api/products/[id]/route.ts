@@ -3,7 +3,7 @@
 import prisma from "@/lib/db";
 import { productSchema } from "@/lib/schemas/product.schema";
 import { NextRequest, NextResponse } from "next/server";
-import { deleteFromS3 } from "@/lib/s3";
+//import { deleteFromS3 } from "@/lib/s3";
 
 interface Params {
   params: Promise<{ id: string }>;
